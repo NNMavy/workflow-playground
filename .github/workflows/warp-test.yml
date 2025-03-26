@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: warp
+
+on:
+  workflow_dispatch:
+
+jobs:
+  main:
+    name: VPN
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect to WARP
+        uses: Boostport/setup-cloudflare-warp@v1
+        with:
+          organization: ${{ secrets.CLOUDFLARE_ORGANIZATION }}
+          auth_client_id: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_ID }}
+          auth_client_secret: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_SECRET }}
+
+      - name: Test Tunnel
+        run: |
+          # Ensure we can contact the target
+          ping ${{ secrets.TEST_IP }} -w 4 || exit 1          
