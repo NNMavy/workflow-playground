@@ -20,4 +20,4 @@ jobs:
       - name: Test Tunnel
         run: |
           # Ensure we can contact the target
-          ping ${{ secrets.TEST_IP }} -w 4 || exit 1          
+          curl -v -k http://${{ secrets.TEST_IP }}:8080
