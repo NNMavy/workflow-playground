@@ -1,0 +1,47 @@
+---
+name: Tag Test
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths: ["esphome/**.yaml"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  # renovate: datasource=github-releases depName=esphome/esphome
+  ESPHOME_VERSION: 2025.6.3
+
+jobs:
+  create_tag:
+    name: Create Tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Get Previous Tag and Determine Next Tag
+        id: determine-next-tag
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          result-encoding: string
+          script: |
+            const { data: tags } = await github.rest.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 1,
+            });
+
+            const prevTag = tags[0]?.name || "0.0.0"; // Default to "0.0.0" if no tags exist
+            const [prevMajor, prevMinor, prevPatch] = prevTag.split('.').map(Number);
+            const now = new Date();
+            const nextMajorMinor = `${now.getFullYear()}.${now.getMonth() + 1}`; // Months are 0-indexed in JavaScript
+            const nextPatch = `${prevMajor}.${prevMinor}` === nextMajorMinor ? prevPatch + 1 : 0;
+
+            console.log(`Previous tag: ${prevTag}`);
+            console.log(`Next tag: ${nextMajorMinor}.${nextPatch}`);
+
+            return `${nextMajorMinor}.${nextPatch}`;
