@@ -29,19 +29,19 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           result-encoding: string
           script: |
+            const esphome_version = process.env.ESPHOME_VERSION;
+
             const { data: tags } = await github.rest.repos.listTags({
               owner: context.repo.owner,
               repo: context.repo.repo,
               per_page: 1,
             });
 
-            const prevTag = tags[0]?.name || "0.0.0"; // Default to "0.0.0" if no tags exist
-            const [prevMajor, prevMinor, prevPatch] = prevTag.split('.').map(Number);
-            const now = new Date();
-            const nextMajorMinor = `${now.getFullYear()}.${now.getMonth() + 1}`; // Months are 0-indexed in JavaScript
-            const nextPatch = `${prevMajor}.${prevMinor}` === nextMajorMinor ? prevPatch + 1 : 0;
+            const prevTag = tags[0]?.name || "0.0.0.0"; // Default to "0.0.0.0" if no tags exist
+            const [prevMajor, prevMinor, prevPatch, prevBuild] = prevTag.split('.').map(Number);
+            const nextBuild = `${prevMajor}.${prevMinor}.${prevPatch}` === esphome_version ? prevBuild + 1 : 0;
 
             console.log(`Previous tag: ${prevTag}`);
-            console.log(`Next tag: ${nextMajorMinor}.${nextPatch}`);
+            console.log(`Next tag: ${esphome_version}.${nextBuild}`);
 
-            return `${nextMajorMinor}.${nextPatch}`;
+            return `${esphome_version}.${nextBuild}`;
