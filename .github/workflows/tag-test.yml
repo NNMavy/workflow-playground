@@ -45,3 +45,26 @@ jobs:
             console.log(`Next tag: ${esphome_version}.${nextBuild}`);
 
             return `${esphome_version}.${nextBuild}`;
+
+      - name: Create Tag
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            const tagName = "${{ steps.determine-next-tag.outputs.result }}";
+
+            const tag = await github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tagName,
+              message: tagName,
+              object: context.sha,
+              type: "commit"
+            });
+
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${tagName}`,
+              sha: tag.data.sha
+            });
